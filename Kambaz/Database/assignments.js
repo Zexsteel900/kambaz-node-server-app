@@ -1,0 +1,110 @@
+export default [
+    {
+      "_id": "A101",
+      "title": "Propulsion Assignment",
+      "course": "RS101",
+      "description": "Analyze the propulsion system of a jet engine and present a detailed report.",
+      "availableFrom": "2025-02-25",
+      "availableTime": "12:00am",
+      "dueDate": "2025-03-07",
+      "dueTime": "11:59pm",
+      "availableUntil": "2025-03-14",
+      "points": 100
+    },
+    {
+      "_id": "A102",
+      "title": "Combustion Analysis",
+      "course": "RS101",
+      "description": "Perform a combustion analysis for a given fuel mixture used in rocket engines.",
+      "availableFrom": "2025-02-28",
+      "availableTime": "12:00am",
+      "dueDate": "2025-03-12",
+      "dueTime": "11:59pm",
+      "availableUntil": "2025-03-19",
+      "points": 100
+    },
+    {
+      "_id": "A103",
+      "title": "Nozzle Design Project",
+      "course": "RS101",
+      "description": "Design and optimize a nozzle for maximum thrust efficiency in a rocket engine.",
+      "availableFrom": "2025-03-03",
+      "availableTime": "12:00am",
+      "dueDate": "2025-03-17",
+      "dueTime": "11:59pm",
+      "availableUntil": "2025-03-24",
+      "points": 150
+    },
+    {
+      "_id": "A201",
+      "title": "Aerodynamics Quiz",
+      "course": "RS102",
+      "description": "Quiz covering fundamental concepts in aerodynamics, including lift, drag, and flow dynamics.",
+      "availableFrom": "2025-02-20",
+      "availableTime": "12:00am",
+      "dueDate": "2025-03-05",
+      "dueTime": "11:59pm",
+      "availableUntil": "2025-03-10",
+      "points": 50
+    },
+    {
+      "_id": "A202",
+      "title": "Flow Analysis",
+      "course": "RS102",
+      "description": "Analyze the airflow around a high-speed aircraft wing using computational tools.",
+      "availableFrom": "2025-02-25",
+      "availableTime": "12:00am",
+      "dueDate": "2025-03-10",
+      "dueTime": "11:59pm",
+      "availableUntil": "2025-03-15",
+      "points": 100
+    },
+    {
+      "_id": "A203",
+      "title": "Heating Analysis",
+      "course": "RS102",
+      "description": "Investigate the thermal effects on aircraft materials during high-speed flight.",
+      "availableFrom": "2025-03-01",
+      "availableTime": "12:00am",
+      "dueDate": "2025-03-14",
+      "dueTime": "11:59pm",
+      "availableUntil": "2025-03-20",
+      "points": 100
+    },
+    {
+      "_id": "A301",
+      "title": "Structural Design Task",
+      "course": "RS103",
+      "description": "Design a lightweight and robust structure for a satellite under specified constraints.",
+      "availableFrom": "2025-02-20",
+      "availableTime": "12:00am",
+      "dueDate": "2025-03-08",
+      "dueTime": "11:59pm",
+      "availableUntil": "2025-03-15",
+      "points": 150
+    },
+    {
+      "_id": "A302",
+      "title": "Orbital Calculations",
+      "course": "RS103",
+      "description": "Calculate the orbital parameters for a satellite mission, including fuel requirements.",
+      "availableFrom": "2025-02-25",
+      "availableTime": "12:00am",
+      "dueDate": "2025-03-11",
+      "dueTime": "11:59pm",
+      "availableUntil": "2025-03-18",
+      "points": 100
+    },
+    {
+      "_id": "A303",
+      "title": "Systems Engineering Exam",
+      "course": "RS103",
+      "description": "Comprehensive exam covering system design, integration, and validation for aerospace projects.",
+      "availableFrom": "2025-02-28",
+      "availableTime": "12:00am",
+      "dueDate": "2025-03-13",
+      "dueTime": "11:59pm",
+      "availableUntil": "2025-03-20",
+      "points": 200
+    }
+  ]
