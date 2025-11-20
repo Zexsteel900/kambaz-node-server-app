@@ -12,12 +12,20 @@ import EnrollmentRoutes from './Kambaz/Enrollments/routes.js';
 
 const app = express();
 
+const FRONTEND_URL = process.env.CLIENT_URL || "http://localhost:5173";
+
 app.use(
     cors({
         credentials: true,
-        origin: process.env.VERCEL_URL || "http://localhost:5173",
+        origin: FRONTEND_URL || "http://localhost:5173",
+        methods: ['GET','POST','PUT','DELETE','OPTIONS'],
     })
 );
+
+app.options('*', cors({
+    origin: FRONTEND_URL,
+    credentials: true,
+}));
 
 const sessionOptions = {
     secret: process.env.SESSION_SECRET || "kambaz",
