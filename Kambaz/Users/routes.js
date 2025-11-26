@@ -1,161 +1,125 @@
 import UsersDao from "./dao.js";
-import * as CourseDao from "../Courses/dao.js";
-import * as EnrollmentsDao from "../Enrollments/dao.js";
 
 export default function UserRoutes(app) {
-  const dao = UsersDao();
+  const usersDao = UsersDao();
 
   // ----------------------
   // ACCOUNT ROUTES
   // ----------------------
+  app.post("/api/users", async (req, res) => {
+    try {
+      const user = await usersDao.createUser(req.body);
+      res.json(user);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  });
 
-  const createUser = async (req, res) => {
-  try {
-    const user = await dao.createUser(req.body);
-    res.json(user);
-  } catch (err) {
-    console.error("Route createUser error:", err.message);
-    res.status(500).json({ message: err.message });
-  }
-  };
+  app.get("/api/users", async (req, res) => {
+    try {
+      const { role, name } = req.query;
 
-  const findAllUsers = async (req, res) => {
-    const { role, name } = req.query;
+      if (role) return res.json(await usersDao.findUsersByRole(role));
+      if (name) return res.json(await usersDao.findUsersByPartialName(name));
 
-    if (role) {
-      const users = await dao.findUsersByRole(role);
+      const users = await usersDao.findAllUsers();
       res.json(users);
-      return;
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
     }
+  });
 
-    if (name) {
-      const users = await dao.findUsersByPartialName(name);
-      res.json(users);
-      return;
+  app.get("/api/users/:userId", async (req, res) => {
+    try {
+      const user = await usersDao.findUserById(req.params.userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
+  });
 
-    const users = await dao.findAllUsers();
-    res.json(users);
-  };
-
-  const findUserById = async (req, res) => {
-    const user = await dao.findUserById(req.params.userId);
-    if (!user) {
-      res.sendStatus(404);
-      return;
+  app.put("/api/users/:userId", async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      await usersDao.updateUser(userId, req.body);
+      const updatedUser = await usersDao.findUserById(userId);
+      req.session["currentUser"] = updatedUser;
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
     }
-    res.json(user);
-  };
+  });
 
-  const updateUser = async (req, res) => {
-    const userId = req.params.userId;
-    await dao.updateUser(userId, req.body);
-    const updatedUser = await dao.findUserById(userId);
-    req.session["currentUser"] = updatedUser;
-    res.json(updatedUser);
-  };
-
-  const deleteUser = async (req, res) => {
-    const status = await dao.deleteUser(req.params.userId);
-    res.json(status);
-  };
-
-  const signup = async (req, res) => {
-    const { username, firstName } = req.body;
-
-    // Validation
-    if (!username || username.trim() === "" || !firstName || firstName.trim() === "") {
-      res.status(400).json({ message: "Username and first name are required" });
-      return;
+  app.delete("/api/users/:userId", async (req, res) => {
+    try {
+      const status = await usersDao.deleteUser(req.params.userId);
+      res.json(status);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
     }
+  });
 
-    const existingUser = await dao.findUserByUsername(username);
-    if (existingUser) {
-      res.status(400).json({ message: "Username already exists" });
-      return;
+  // ----------------------
+  // AUTH ROUTES
+  // ----------------------
+  app.post("/api/users/signup", async (req, res) => {
+    try {
+      const { username, firstName } = req.body;
+      if (!username || !firstName) {
+        return res.status(400).json({ message: "Username and first name required" });
+      }
+
+      if (await usersDao.findUserByUsername(username)) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      const currentUser = await usersDao.createUser(req.body);
+      req.session["currentUser"] = currentUser;
+      res.json(currentUser);
+    } catch (error) {
+      console.error("Error signing up:", error);
+      res.status(500).json({ message: "Failed to create account" });
     }
+  });
 
-    const currentUser = await dao.createUser(req.body);
-    req.session["currentUser"] = currentUser;
-    res.json(currentUser);
-  };
+  app.post("/api/users/signin", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      const currentUser = await usersDao.findUserByCredentials(username, password);
+      
+      if (!currentUser) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
 
-  const signin = async (req, res) => {
-    const { username, password } = req.body;
-    const currentUser = await dao.findUserByCredentials(username, password);
-    if (!currentUser) {
-      res.status(401).json({ message: "Unable to login. Try again later." });
-      return;
+      req.session["currentUser"] = currentUser;
+      res.json(currentUser);
+    } catch (error) {
+      console.error("Error signing in:", error);
+      res.status(500).json({ message: "Failed to sign in" });
     }
-    req.session["currentUser"] = currentUser;
-    res.json(currentUser);
-  };
+  });
 
-  const signout = async (req, res) => {
+  app.post("/api/users/signout", (req, res) => {
     req.session.destroy();
     res.sendStatus(200);
-  };
-
-  const profile = async (req, res) => {
-    const currentUser = req.session["currentUser"];
-    if (!currentUser) {
-      res.sendStatus(401);
-      return;
-    }
-    res.json(currentUser);
-  };
-
-  // ----------------------
-  // COURSES FOR USER
-  // ----------------------
-  const findCoursesForEnrolledUser = async (req, res) => {
-    let { userId } = req.params;
-    if (userId === "current") {
-      const currentUser = req.session["currentUser"];
-      if (!currentUser) {
-        res.sendStatus(401);
-        return;
-      }
-      userId = currentUser._id;
-    }
-    const courses = await CourseDao.findCoursesForEnrolledUser(userId);
-    res.json(courses);
-  };
-
-  const createCourse = async (req, res) => {
-    const currentUser = req.session["currentUser"];
-    if (!currentUser) {
-      res.sendStatus(401);
-      return;
-    }
-    const newCourse = await CourseDao.createCourse(req.body);
-    await EnrollmentsDao.enrollUserInCourse(currentUser._id, newCourse._id);
-    res.json(newCourse);
-  };
-
-  // ----------------------
-  // ROUTE DEFINITIONS
-  // ----------------------
-  app.post("/api/users", createUser);
-  app.get("/api/users", findAllUsers);
-  app.get("/api/users/:userId", findUserById);
-  app.put("/api/users/:userId", updateUser);
-  app.delete("/api/users/:userId", deleteUser);
-
-  app.post("/api/users/signup", signup);
-  app.post("/api/users/signin", signin);
-  app.post("/api/users/signout", signout);
-  app.post("/api/users/profile", profile);
-
-  app.get("/api/users/:userId/courses", findCoursesForEnrolledUser);
-  app.post("/api/users/current/courses", createCourse);
-
-  // Enrolled users in a course
-  app.get("/api/courses/:cid/users", async (req, res) => {
-    const { cid } = req.params;
-    const enrolledUserIds = await EnrollmentsDao.findUsersByCourseId(cid);
-    const users = await dao.findAllUsers();
-    const enrolledUsers = users.filter(u => enrolledUserIds.includes(u._id));
-    res.json(enrolledUsers);
   });
+
+  app.post("/api/users/profile", (req, res) => {
+    const currentUser = req.session["currentUser"];
+    if (!currentUser) return res.sendStatus(401);
+    res.json(currentUser);
+  });
+
+  // ❌ REMOVED: Duplicate enrollment routes
+  // These should ONLY be in CourseRoutes to avoid conflicts
+  // The following routes were removed:
+  // - GET /api/users/:userId/courses
+  // - POST /api/users/:uid/courses/:cid
+  // - DELETE /api/users/:uid/courses/:cid
+  // - GET /api/courses/:cid/users
 }

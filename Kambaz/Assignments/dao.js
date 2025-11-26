@@ -1,25 +1,43 @@
-import db from "../Database/index.js";
-import {v4 as uuidv4} from "uuid";
+import model from "./model.js";
+import { v4 as uuidv4 } from "uuid";
 
-export function findAssignmentForCourse(courseId) {
-    const {assignments} = db;
-    return assignments.filter((assignment) => assignment.course === courseId);
-}
+export default function AssignmentsDao() {
+  
+  // Find all assignments for a course
+  async function findAssignmentsForCourse(courseId) {
+    return model.find({ courseId });
+  }
 
-export function deleteAssignment(assignmentId) {
-    const {assignments} = db;
-    db.assignments = assignments.filter((assignment) => assignment._id !== assignmentId);
-}
+  // Find single assignment by ID
+  async function findAssignmentById(assignmentId) {
+    return model.findById(assignmentId);
+  }
 
-export function updateAssignment(assignmentId, assignmentUpdates) {
-    const {assignments} = db;
-    const assignment = assignments.find((assignment) => assignment._id === assignmentId);
-    Object.assign(assignment, assignmentUpdates);
-    return assignment;
-}
-
-export function createAssignment(assignment) {
-    const newAssignment = {...assignment, _id: uuidv4()};
-    db.assignments = [...db.assignments, newAssignment];
+  // Create a new assignment
+  async function createAssignment(courseId, assignment) {
+    const newAssignment = { ...assignment, _id: uuidv4(), courseId };
+    await model.create(newAssignment);
     return newAssignment;
+  }
+
+  // Update an assignment
+  async function updateAssignment(assignmentId, assignmentUpdates) {
+    const assignment = await model.findById(assignmentId);
+    Object.assign(assignment, assignmentUpdates);
+    await assignment.save();
+    return assignment;
+  }
+
+  // Delete an assignment
+  async function deleteAssignment(assignmentId) {
+    return model.deleteOne({ _id: assignmentId });
+  }
+
+  return {
+    findAssignmentsForCourse,
+    findAssignmentById,
+    createAssignment,
+    updateAssignment,
+    deleteAssignment,
+  };
 }

@@ -1,31 +1,45 @@
-import db from "../Database/index.js";
-import {v4 as uuidv4} from "uuid";
+import model from "./model.js";
+import { v4 as uuidv4 } from "uuid";
 
-export function findAllCourses() {
-  return db.courses;
-}
+export default function CoursesDao() {
+  async function findAllCourses() {
+    return model.find({});
+  }
 
-export function findCoursesForEnrolledUser(userId) {
-  const {courses, enrollments} = db;
-  const enrolledCourses = courses.filter((course) => enrollments.some((enrollment) => enrollment.user === userId && enrollment.course === course._id));
-  return enrolledCourses;
-}
+  async function findCourseById(courseId) {
+    return model.findById(courseId);
+  }
 
-export function createCourse(course) {
-  const newCourse = {...course, _id: uuidv4()};
-  db.courses = [...db.courses, newCourse];
-  return newCourse;
-}
+  async function createCourse(courseData) {
+    console.log("DAO: Creating course with data:", courseData);
+    
+    // Generate _id if not provided
+    const newCourse = {
+      ...courseData,
+      _id: courseData._id || uuidv4()
+    };
+    
+    console.log("DAO: Course with _id:", newCourse);
+    
+    const result = await model.create(newCourse);
+    console.log("DAO: Course created, result:", result);
+    
+    return result;
+  }
 
-export function deleteCourse(courseId) {
-  const {courses, enrollments} = db;
-  db.courses = courses.filter((course) => course._id !== courseId);
-  db.enrollments = enrollments.filter((enrollment) => enrollment.course !== courseId);
-}
+  async function updateCourse(courseId, updates) {
+    return model.findByIdAndUpdate(courseId, updates, { new: true });
+  }
 
-export function updateCourse(courseId, courseUpdates) {
-  const {courses} = db;
-  const course = courses.find((course) => course._id === courseId);
-  Object.assign(course, courseUpdates);
-  return course;
+  async function deleteCourse(courseId) {
+    return model.findByIdAndDelete(courseId);
+  }
+
+  return {
+    findAllCourses,
+    findCourseById,
+    createCourse,
+    updateCourse,
+    deleteCourse,
+  };
 }
