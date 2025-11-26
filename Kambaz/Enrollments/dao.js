@@ -19,3 +19,10 @@ export function enrollUserInCourse(userId, courseId) {
       enrollments.some((e) => e.user === userId && e.course === course._id)
     );
   }
+
+  export function findUsersByCourseId(courseId) {
+  const { enrollments } = db;
+  return enrollments
+    .filter((e) => e.course === courseId)
+    .map((e) => e.user);
+  }

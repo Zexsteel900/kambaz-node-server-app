@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Hello from "./Hello.js";
 import Lab5 from "./Lab5/index.js";
 import cors from 'cors';
@@ -12,36 +13,73 @@ import EnrollmentRoutes from './Kambaz/Enrollments/routes.js';
 
 const app = express();
 
+// FRONTEND URL
 const FRONTEND_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
+// ----------------------
+// DATABASE CONNECTION
+// ----------------------
+const CONNECTION_STRING = process.env.DATABASE_CONNECTION_STRING || "mongodb://127.0.0.1:27017/kambaz";
+mongoose.connect(CONNECTION_STRING)
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.error("MongoDB connection error:", err));
+
+// ----------------------
+// ✅ CORS FIX
+// ----------------------
 app.use(
     cors({
+        origin: FRONTEND_URL,
         credentials: true,
-        origin: FRONTEND_URL || "http://localhost:5173",
-        methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     })
 );
 
-app.options('*', cors({
+app.options("*", cors({
     origin: FRONTEND_URL,
     credentials: true,
 }));
 
+// ----------------------
+// ✅ SESSION FIX (WORKS LOCAL + PRODUCTION)
+// ----------------------
 const sessionOptions = {
     secret: process.env.SESSION_SECRET || "kambaz",
     resave: false,
     saveUninitialized: false,
+    cookie: {}
 };
-if (process.env.NODE_ENV !== "development") {
-    console.log("here")
-    sessionOptions.proxy = true;
+
+// LOCALHOST
+if (process.env.NODE_ENV === "development") {
     sessionOptions.cookie = {
-        sameSite: "none",
-        secure: true,
-    };
+        sameSite: "lax",  // MUST be lax on localhost
+        secure: false     // MUST be false on localhost
+    };
 }
+
+// PRODUCTION (Render)
+if (process.env.NODE_ENV === "production") {
+    console.log("Running in production mode");
+    sessionOptions.proxy = true; 
+    sessionOptions.cookie = {
+        sameSite: "none", // allow cross-site cookies
+        secure: true      // only works with HTTPS
+    };
+}
+
 app.use(session(sessionOptions));
+
+
+// ----------------------
+// BODY PARSER
+// ----------------------
 app.use(express.json());
+
+
+// ----------------------
+// ROUTES
+// ----------------------
 Hello(app);
 Lab5(app);
 UserRoutes(app);
@@ -49,4 +87,11 @@ CourseRoutes(app);
 ModuleRoutes(app);
 AssignmentRoutes(app);
 EnrollmentRoutes(app);
-app.listen(process.env.PORT || 4000)
+
+
+// ----------------------
+// START SERVER
+// ----------------------
+app.listen(process.env.PORT || 4000, () => {
+    console.log(`Server running on port ${process.env.PORT || 4000}`);
+});

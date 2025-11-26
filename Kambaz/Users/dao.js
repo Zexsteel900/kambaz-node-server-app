@@ -1,21 +1,75 @@
-import db from '../Database/index.js';
-import { v4 as uuidv4 } from 'uuid';
-let {users} = db;
+import model from "./model.js";
+import { v4 as uuidv4 } from "uuid";
+import mongoose from "mongoose";
 
-export const createUser = (user) => {
-    const newUser = {...user, _id: uuidv4() };
-    users = [...users, newUser];
-    return newUser;
-};
+export default function UsersDao() {
+  
+  const createUser = async (user) => {
+    try {
+      // Remove _id if present
+      const { _id, ...rest } = user;
 
-export const findAllUsers = () => users;
+      // Generate safe, unique username
+      const username = rest.username || `newuser${Date.now()}`;
 
-export const findUserById = (userId) => users.find((user) => user._id === userId);
+      const newUser = {
+        ...rest,
+        _id: uuidv4(),
+        firstName: rest.firstName || "New",
+        lastName: rest.lastName || `User${Date.now()}`,
+        username,
+        password: rest.password || "password123",
+        email: rest.email || `email${Date.now()}@neu.edu`,
+        section: rest.section || "S101",
+        role: rest.role || "STUDENT",
+      };
 
-export const findUserByUsername = (username) => users.find((user) => user.username === username);
+      return await model.create(newUser);
+    } catch (err) {
+      console.error("DAO createUser error:", err);
 
-export const findUserByCredentials = (username, password) => users.find((user) => user.username === username && user.password === password);
+      if (err.code === 11000 && err.keyPattern?.username) {
+        throw new Error("Username already exists");
+      }
+      if (err.name === "ValidationError") {
+        throw new Error(
+          Object.values(err.errors).map((e) => e.message).join(", ")
+        );
+      }
+      throw new Error("Failed to create user");
+    }
+  };
+  const findAllUsers = () => model.find({});
+  
+  const findUserById = (userId) => model.findById(userId);
 
-export const updateUser = (userId, user) => (users = users.map((u) => (u._id === userId ? user : u)));
+  const findUserByUsername = (username) => model.findOne({ username });
 
-export const deleteUser = (userId) => (users = users.filter((u) => u._id !== userId));
+  const findUsersByRole = (role) => model.find({ role });
+
+  const findUsersByPartialName = (name) => {
+    const regex = new RegExp(name, "i");
+    return model.find({
+      $or: [{ firstName: regex }, { lastName: regex }],
+    });
+  };
+
+  const updateUser = (userId, user) => model.updateOne({ _id: userId }, { $set: user });
+
+  const deleteUser = (userId) => model.findByIdAndDelete(userId);
+
+  const findUserByCredentials = (username, password) =>
+    model.findOne({ username, password });
+
+  return {
+    createUser,
+    findAllUsers,
+    findUserById,
+    findUserByUsername,
+    findUsersByRole,
+    findUsersByPartialName,
+    updateUser,
+    deleteUser,
+    findUserByCredentials,
+  };
+}
