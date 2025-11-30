@@ -1,22 +1,27 @@
 import model from "./model.js";
-import bcrypt from "bcrypt";
+import { v4 as uuidv4 } from "uuid";
+import mongoose from "mongoose";
 
 export default function UsersDao() {
   
-  // ----------------------
-  // CREATE USER
-  // ----------------------
   const createUser = async (user) => {
     try {
-      // Remove any _id the frontend accidentally sends
-      const { _id, password, ...rest } = user;
+      // Remove _id if present
+      const { _id, ...rest } = user;
 
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
+      // Generate safe, unique username
+      const username = rest.username || `newuser${Date.now()}`;
 
       const newUser = {
         ...rest,
-        password: hashedPassword,
+        _id: uuidv4(),
+        firstName: rest.firstName || "New",
+        lastName: rest.lastName || `User${Date.now()}`,
+        username,
+        password: rest.password || "password123",
+        email: rest.email || `email${Date.now()}@neu.edu`,
+        section: rest.section || "S101",
+        role: rest.role || "STUDENT",
       };
 
       return await model.create(newUser);
@@ -26,22 +31,21 @@ export default function UsersDao() {
       if (err.code === 11000 && err.keyPattern?.username) {
         throw new Error("Username already exists");
       }
+      if (err.name === "ValidationError") {
+        throw new Error(
+          Object.values(err.errors).map((e) => e.message).join(", ")
+        );
+      }
       throw new Error("Failed to create user");
     }
   };
-
-  // ----------------------
-  // FIND USERS
-  // ----------------------
   const findAllUsers = () => model.find({});
-
+  
   const findUserById = (userId) => model.findById(userId);
 
-  const findUserByUsername = (username) =>
-    model.findOne({ username });
+  const findUserByUsername = (username) => model.findOne({ username });
 
-  const findUsersByRole = (role) =>
-    model.find({ role });
+  const findUsersByRole = (role) => model.find({ role });
 
   const findUsersByPartialName = (name) => {
     const regex = new RegExp(name, "i");
@@ -50,34 +54,12 @@ export default function UsersDao() {
     });
   };
 
-  // ----------------------
-  // UPDATE USER
-  // ----------------------
-  const updateUser = async (userId, user) => {
-    // Prevent password overwrite unless explicitly provided
-    if (user.password) {
-      user.password = await bcrypt.hash(user.password, 10);
-    }
+  const updateUser = (userId, user) => model.updateOne({ _id: userId }, { $set: user });
 
-    return model.findByIdAndUpdate(userId, user, { new: true });
-  };
+  const deleteUser = (userId) => model.findByIdAndDelete(userId);
 
-  // ----------------------
-  // DELETE USER
-  // ----------------------
-  const deleteUser = (userId) =>
-    model.findByIdAndDelete(userId);
-
-  // ----------------------
-  // SIGNIN: VERIFY PASSWORD
-  // ----------------------
-  const findUserByCredentials = async (username, password) => {
-    const user = await model.findOne({ username });
-    if (!user) return null;
-
-    const match = await bcrypt.compare(password, user.password);
-    return match ? user : null;
-  };
+  const findUserByCredentials = (username, password) =>
+    model.findOne({ username, password });
 
   return {
     createUser,
