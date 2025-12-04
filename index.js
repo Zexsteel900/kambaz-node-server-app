@@ -10,6 +10,7 @@ import CourseRoutes from './Kambaz/Courses/routes.js';
 import ModuleRoutes from './Kambaz/Modules/routes.js';
 import AssignmentRoutes from './Kambaz/Assignments/routes.js';
 import EnrollmentRoutes from './Kambaz/Enrollments/routes.js';
+import PazzaRoutes from "./Kambaz/Pazza/routes.js";
 
 const app = express();
 
@@ -87,6 +88,7 @@ CourseRoutes(app);
 ModuleRoutes(app);
 AssignmentRoutes(app);
 EnrollmentRoutes(app);
+PazzaRoutes(app);
 
 
 // ----------------------
@@ -94,4 +96,4 @@ EnrollmentRoutes(app);
 // ----------------------
 app.listen(process.env.PORT || 4000, () => {
     console.log(`Server running on port ${process.env.PORT || 4000}`);
-});
+})
