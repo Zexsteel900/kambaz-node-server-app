@@ -48,6 +48,7 @@ const sessionOptions = {
     secret: process.env.SESSION_SECRET || "kambaz",
     resave: false,
     saveUninitialized: false,
+    proxy: true, 
     cookie: {}
 };
 
