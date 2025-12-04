@@ -13,7 +13,7 @@ import EnrollmentRoutes from './Kambaz/Enrollments/routes.js';
 import PazzaRoutes from "./Kambaz/Pazza/routes.js";
 
 const app = express();
-
+app.set("trust proxy", 1);
 // FRONTEND URL
 const FRONTEND_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
