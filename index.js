@@ -30,7 +30,9 @@ mongoose.connect(CONNECTION_STRING)
 // ----------------------
 app.use(
     cors({
-        origin: FRONTEND_URL,
+        origin: [FRONTEND_URL,
+                 "https://kambaz-pazza-git-main-jeet-narkhedes-projects.vercel.app",
+                 ],
         credentials: true,
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     })
